@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { connect } from 'react-redux';
-import { setProducts, selectProduct } from '../redux/action';
+import { setProducts, setSelectProduct } from '../redux/action';
 import axios from 'axios';
 import Layout from './Layout';
+import { saveProductsToLocalStorage } from '../redux/productsAction';
+import Checkout from './Checkout';
+// import { uuid } from 'uuidv4';
 
-function Body({ products, setProducts, selectProduct }) {
+function Body({ products, setProducts, setSelectProduct }) {
   const [isfilterOpen, setIsFilterOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState('Select Filter');
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
 
   const toggleFilter = () => {
     setIsFilterOpen((prevIsMenuOpen) => !prevIsMenuOpen);
@@ -18,9 +23,29 @@ function Body({ products, setProducts, selectProduct }) {
   };
 
   const handleProductSelect = (productId) => {
-    selectProduct(productId);
+    setSelectProduct(productId);
   };
 
+  // Function to add items to the cart
+  // Function to add items to the cart
+  const addToCart = (item) => {
+    const itemIndex = cartItems.findIndex(
+      (cartItem) => cartItem.items.itemId === item.item.itemId,
+    );
+
+    if (itemIndex !== -1) {
+      // Item already exists in the cart; increment quantity
+      const updatedCartItems = [...cartItems];
+      updatedCartItems[itemIndex].quantity += 1;
+      setCartItems(updatedCartItems);
+    } else {
+      // Item doesn't exist in the cart; add a new item
+      const items = item.item;
+      setCartItems([...cartItems, { items, quantity: 1 }]);
+    }
+  };
+
+  console.log(cartItems);
   useEffect(() => {
     const fetchData = async () => {
       const options = {
@@ -32,13 +57,15 @@ function Body({ products, setProducts, selectProduct }) {
         },
         headers: {
           'X-RapidAPI-Key':
-            'b83548d7b8msh62c358033a2f1bcp19521ejsn0f5bd155b388',
+            'de61fc37a6msh7e351480c227941p1c8916jsn355e046976ba',
           'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com',
         },
       };
       try {
         const response = await axios.request(options);
         setProducts(response.data.result.resultList);
+        // Save products to local storage after setting them in the Redux store
+        saveProductsToLocalStorage(response.data.result.resultList);
       } catch (error) {
         console.error(error);
       }
@@ -46,6 +73,7 @@ function Body({ products, setProducts, selectProduct }) {
 
     if (!products.length) {
       fetchData();
+      console.log('Fetcjed');
     }
   }, [products]);
 
@@ -65,7 +93,7 @@ function Body({ products, setProducts, selectProduct }) {
           </p>
         </div>
       </div>
-      <Layout />
+      <Layout setCheckout={setIsCheckoutOpen} />
       <div className="center 2xl:mx-32">
         <div className="img flex xl:mt-10 ">
           <img className="w-full max-sm:h-32" src="./main.png" alt="" />
@@ -147,47 +175,54 @@ function Body({ products, setProducts, selectProduct }) {
         <div className="headphones grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 place-items-center max-sm:grid-cols-2">
           {products ? (
             products.map((item) => (
-              <Link
-                to={`/product/${item.item.itemId}`}
-                className="item flex flex-col items-center"
-                key={item.item.itemId}
-                onClick={() => handleProductSelect(item.item.itemId)}
-              >
-                <img
-                  className="w-full h-80 max-sm:w-36 max-sm:h-48"
-                  src={item.item.image}
-                  alt=""
-                />
-                <i></i>
-                <div className="box">
-                  <div className="price flex my-2 max-md:flex-col">
-                    <h1>{item.item.title.slice(0, 20)}...</h1>
-                    <p className="ml-8 max-sm:ml-0">
-                      ${item.item.sku.def.promotionPrice}
-                    </p>
+              <div className="" key={item.item.itemId}>
+                <Link
+                  to={`/product/${item.item.itemId}`}
+                  className="item flex flex-col items-center"
+                  onClick={() => handleProductSelect(item.item.itemId)}
+                >
+                  <img
+                    className="w-full h-80 max-sm:w-36 max-sm:h-48"
+                    src={item.item.image}
+                    alt=""
+                  />
+                  <i></i>
+                  <div className="box">
+                    <div className="price flex my-2 max-md:flex-col">
+                      <h1>{item.item.title.slice(0, 20)}...</h1>
+                      <p className="ml-8 max-sm:ml-0">
+                        ${item.item.sku.def.promotionPrice}
+                      </p>
+                    </div>
+                    <div className="rating">
+                      <p className="mb-2 text-sm font-light">{`${
+                        item.delivery.freeShipping
+                          ? 'Free Delivery Available'
+                          : 'Delivery Charges Applicable'
+                      }`}</p>
+                      <p className="mb-2">
+                        {item.item.averageStarRate}
+                        <i className="uim uim-star"></i>
+                      </p>
+                    </div>
                   </div>
-                  <div className="rating">
-                    <p className="mb-2 text-sm font-light">{`${
-                      item.delivery.freeShipping
-                        ? 'Free Delivery Available'
-                        : 'Delivery Charges Applicable'
-                    }`}</p>
-                    <p className="mb-2">
-                      {item.item.averageStarRate}
-                      <i className="uim uim-star"></i>
-                    </p>
-                    <button className="border-2 py-2 px-5 rounded-full hover:bg-emerald-900 hover:text-white transition duration-300">
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+                <button
+                  className="border-2 py-2 px-5 rounded-full hover:bg-emerald-900 hover:text-white transition duration-300"
+                  onClick={() => addToCart(item)}
+                >
+                  Add to Cart
+                </button>
+              </div>
             ))
           ) : (
             <p>Loading...</p>
           )}
         </div>
       </div>
+      {isCheckoutOpen && (
+        <Checkout closeCheckout={setIsCheckoutOpen} cartItems={cartItems} />
+      )}
     </>
   );
 }
@@ -198,7 +233,7 @@ const mapStateToProps = (state) => ({
 
 const mapDispatchToProps = {
   setProducts,
-  selectProduct,
+  setSelectProduct,
 };
 
 export default connect(mapStateToProps, mapDispatchToProps)(Body);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Layout() {
+function Layout({ setCheckout }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
@@ -38,7 +38,12 @@ function Layout() {
             <p className="hidden xl:block mx-6">
               <i className="uil uil-user font-bold text-xl"></i> Account
             </p>
-            <p className="hidden xl:block">
+            <p
+              className="hidden xl:block cursor-pointer"
+              onClick={() => {
+                setCheckout(true); // Open the checkout component when clicked
+              }}
+            >
               <i className="uil uil-shopping-cart-alt text-xl"></i> Cart
             </p>
           </div>

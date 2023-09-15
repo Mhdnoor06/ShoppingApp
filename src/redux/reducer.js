@@ -1,6 +1,8 @@
 // reducers/productReducer.js
+import { loadProductsFromLocalStorage } from './productsAction';
+
 const initialState = {
-  products: [],
+  products: loadProductsFromLocalStorage(),
   selectedProduct: null,
 };
 

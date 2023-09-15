@@ -4,7 +4,7 @@ export const setProducts = (products) => ({
   payload: products,
 });
 
-export const selectProduct = (product) => ({
+export const setSelectProduct = (product) => ({
   type: 'SELECT_PRODUCT',
   payload: product,
 });

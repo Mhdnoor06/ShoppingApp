@@ -1,14 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { connect } from 'react-redux';
-import { setProducts, selectProduct } from '../redux/action';
+import { setProducts, setSelectProduct } from '../redux/action';
 import { useParams } from 'react-router-dom';
 
 import Layout from './Layout';
 import axios from 'axios';
 
-function Products({ products }) {
+function Product({ products, selectProduct }) {
   const [productDetail, setProductDetail] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const { productId } = useParams();
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+
+  console.log(products);
+
+  const handleIncrement = () => {
+    setQuantity(quantity + 1); // Increase quantity by 1
+  };
+
+  const handleDecrement = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1); // Decrease quantity by 1, but not below 1
+    }
+  };
 
   useEffect(() => {
     const fetchProductDetail = async () => {
@@ -20,7 +34,7 @@ function Products({ products }) {
         },
         headers: {
           'X-RapidAPI-Key':
-            'b83548d7b8msh62c358033a2f1bcp19521ejsn0f5bd155b388',
+            'de61fc37a6msh7e351480c227941p1c8916jsn355e046976ba',
           'X-RapidAPI-Host': 'aliexpress-datahub.p.rapidapi.com',
         },
       };
@@ -42,17 +56,17 @@ function Products({ products }) {
 
   return (
     <>
-      <Layout />
-      <div className="products w-full flex flex-col lg:flex-row mx-5 mt-10 font-poppins">
-        <div className="images w-full lg:w-1/2 flex flex-col items-center border">
-          <div className="largeimg">
+      <Layout setCheckout={setIsCheckoutOpen} />
+      <div className="products flex flex-col lg:flex-row mx-5 mt-10 font-poppins">
+        <div className="images lg:w-2/5 flex flex-col border">
+          <div className="largeimg flex justify-center">
             <img
-              className="rounded-lg"
+              className="w-9/12 rounded-lg"
               src={productDetail.result.item.images[0]}
               alt=""
             />
           </div>
-          <div className="allimgs flex w-full overflow-x-auto mt-3">
+          <div className="allimgs flex w-full overflow-x-auto mt-3 justify-center">
             {productDetail.result.item.images
               .slice(1, 5)
               .map((image, index) => (
@@ -67,9 +81,7 @@ function Products({ products }) {
         </div>
         <div className="details w-full lg:w-1/2 ml-0 lg:ml-20">
           <div className="w-full">
-            <h1 className="font-bold text-3xl">
-              {productDetail.result.item.title}
-            </h1>
+            <h1 className="text-2xl">{productDetail.result.item.title}</h1>
             <div className="my-4">
               <p className="font-light text-sm">
                 Lorem ipsum dolor, sit amet consectetur adipisicing elit.
@@ -85,6 +97,7 @@ function Products({ products }) {
               Lorem ipsum dolor sit, amet consectetur adipisicing elit. Ratione
               at repellendus,
             </p>
+            <br />
             <hr />
             <p className="mt-5">Choose a color</p>
             <div className="flex mt-4">
@@ -94,12 +107,21 @@ function Products({ products }) {
               <span className="bg-slate-600 w-10 h-10 ml-3 border p-3 rounded-full"></span>
               <span className="bg-yellow-600 w-10 h-10 ml-3 border p-3 rounded-full"></span>
             </div>
+            <br />
             <hr />
             <div className="flex items-center mt-5">
-              <button className="border rounded-full flex items-center justify-center w-1/2 py-3">
+              <button
+                className="border rounded-full flex items-center justify-center w-1/6 py-3"
+                onClick={handleDecrement} // Decrease quantity when clicked
+              >
                 <span className="text-xl text-green-800">-</span>
-                <span className="text-xl text-green-800 ml-5">1</span>
-                <span className="text-xl text-green-800 ml-5">+</span>
+              </button>
+              <span className="text-xl text-green-800 ml-3">{quantity}</span>
+              <button
+                className="border rounded-full flex items-center justify-center w-1/6 py-3 mx-3 hover:bg-lime-90 text-white"
+                onClick={handleIncrement} // Increase quantity when clicked
+              >
+                <span className="text-xl text-green-800">+</span>
               </button>
               <p className="ml-5">
                 Quantity Available {productDetail.result.item.sku.def.quantity}
@@ -132,11 +154,12 @@ function Products({ products }) {
 
 const mapStateToProps = (state) => ({
   products: state.product.products,
+  selectProduct: state.product.selectedProduct,
 });
 
 const mapDispatchToProps = {
   setProducts,
-  selectProduct,
+  setSelectProduct,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Products);
+export default connect(mapStateToProps, mapDispatchToProps)(Product);
